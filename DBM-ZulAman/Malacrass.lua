@@ -9,7 +9,7 @@ mod:SetZone()
 mod:RegisterCombat("combat_yell", L.YellPull)
 
 mod:RegisterEventsInCombat(
-	"SPELL_AURA_APPLIED 43501 43421",
+	"SPELL_AURA_APPLIED 43429 43501 43421",
 	"SPELL_CAST_START 43548 43451 43431",
 	"SPELL_CAST_SUCCESS 43383 43329",
 	"SPELL_SUMMON 43436"
@@ -30,6 +30,7 @@ local specWarnHeal2	= mod:NewSpecialWarningInterrupt(43451, "HasInterrupt", nil,
 local specWarnHeal3	= mod:NewSpecialWarningInterrupt(43431, "HasInterrupt", nil, nil, 1, 2)
 local specWarnHeal4	= mod:NewSpecialWarningDispel(43421, "MagicDispeller", nil, nil, 1, 2)
 local specWarnTotem	= mod:NewSpecialWarningSwitch(43436, "Dps", nil, nil, 1, 2)
+local specWarnCons  = mod:NewSpecialWarningMove(41541, nil, nil, nil, 1, 2)
 
 local timerSiphon	= mod:NewTargetTimer(30, 43501, nil, nil, nil, 6)
 local timerBoltCD	= mod:NewCDTimer(41, 43383, nil, nil, nil, 2, nil, DBM_CORE_L.HEALER_ICON)
@@ -52,6 +53,9 @@ function mod:SPELL_AURA_APPLIED(args)
 		else
 			warnHeal4:Show(args.destName)
 		end
+	elseif args:IsSpellID(43429) and args:IsPlayer() and self:AntiSpam(3, 1) and not self:IsTrivial() then
+		 specWarnCons:Show()
+		 specWarnCons:Play("runaway")
 	end
 end
 
