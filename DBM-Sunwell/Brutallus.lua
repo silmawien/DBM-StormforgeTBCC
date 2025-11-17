@@ -47,14 +47,15 @@ local yellDoomfire      = mod:NewYell(31944)
 local berserkTimer		= mod:NewBerserkTimer(360)
 
 mod:AddSetIconOption("BurnIcon", 46394, true, false, {1, 2, 3})
-mod:AddSetIconOption("WreathIcons", 31944, true, false, {7, 8})
+mod:AddSetIconOption("WreathIcons", 31944, true, false, {6, 7})
+mod:AddSetIconOption("ArmageddonIcon", 20478, true, false, {8})
 
 mod:AddRangeFrameOption(46394, 4)
 
 mod.vb.burnIcon = 3
 
 local WreathTargets = {}
-mod.vb.flameWreathIcon = 8
+mod.vb.flameWreathIcon = 7
 
 local debuffName = DBM:GetSpellInfo(46394)
 
@@ -69,14 +70,17 @@ local function warnFlameWreathTargets(self)
 	if #WreathTargets > 1 then
 		warningFlameTargets:Show(table.concat(WreathTargets, "<, >"))
 		timerFlame:Start()
+		if UnitIsGroupLeader("player") then
+ 			SendChatMessage("Doomfire on " .. table.concat(WreathTargets, ", "), (IsInGroup(2) and "INSTANCE_CHAT") or (IsInRaid() and "RAID") or "PARTY")
+		end
 	end
-	self.vb.flameWreathIcon = 8
+	self.vb.flameWreathIcon = 7
 	table.wipe(WreathTargets)
 end
 
 function mod:OnCombatStart(delay)
 	self.vb.burnIcon = 3
-	self.vb.flameWreathIcon = 8
+	self.vb.flameWreathIcon = 7
 	timerBurnCD:Start(-delay)
 	timerStompCD:Start(-delay)
 	timerArmageddon:Start(-delay)
@@ -130,6 +134,9 @@ function mod:SPELL_AURA_APPLIED(args)
 			yellArmageddon:Yell()
 		end
 		timerArmageddon:Start()
+		if self.Options.ArmageddonIcon then
+			self:SetIcon(args.destName, 8, 10)
+		end
 	elseif args.spellId == 31944 then
 		WreathTargets[#WreathTargets + 1] = args.destName
 		if args:IsPlayer() then

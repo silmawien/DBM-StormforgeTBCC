@@ -5,7 +5,7 @@ mod:SetRevision("20210623162544")
 mod:SetCreatureID(25038)
 mod:SetEncounterID(WOW_PROJECT_ID ~= (WOW_PROJECT_BURNING_CRUSADE_CLASSIC or 5) and 726 or 2490)
 mod:SetModelID(22838)
-mod:SetUsedIcons(8, 7)
+mod:SetUsedIcons(1, 2, 4, 6, 8)
 
 mod:RegisterCombat("combat")
 
@@ -39,27 +39,27 @@ local timerEncaps			= mod:NewTargetTimer(7, 45665, nil, nil, nil, 3)
 local timerBreath			= mod:NewCDCountTimer(17, 45717, nil, nil, nil, 3, nil, DBM_CORE_L.DEADLY_ICON)
 local timerPhase			= mod:NewTimer(60, "TimerPhase", 31550, nil, nil, 6)
 
-local berserkTimer			= mod:NewBerserkTimer(45855)
+local berserkTimer			= mod:NewBerserkTimer(600) -- guessing
 
 local yellGas		        = mod:NewYell(45855)
 
 mod:AddBoolOption("EncapsIcon", true)
 mod:AddBoolOption("VaporIcon", true)
 
-mod:AddSetIconOption("WreathIcons", 45855, true, false, {6, 7, 8})
+mod:AddSetIconOption("WreathIcons", 45855, true, false, {4, 2, 1})
 
 mod.vb.breathCounter = 0
 
 local WreathTargets = {}
-mod.vb.flameWreathIcon = 8
+mod.vb.flameWreathIcon = 4
 
 local function warnFlameWreathTargets(self)
 	if #WreathTargets > 2 then
 		warningFlameTargets:Show(table.concat(WreathTargets, "<, >"))
 		--timerFlame:Start()
-		self:BossTargetScanner(25038, "EncapsulateTarget", 0.25, 60)
+		self:BossTargetScanner(25038, "EncapsulateTarget", 0.25, 70)
 	end
-	self.vb.flameWreathIcon = 8
+	self.vb.flameWreathIcon = 4
 	table.wipe(WreathTargets)
 end
 
@@ -74,7 +74,7 @@ function mod:EncapsulateTarget(targetname, uId)
 	if not targetname then return end
 	timerEncaps:Start(targetname)
 	if self.Options.EncapsIcon then
-		self:SetIcon(targetname, 7, 5)
+		self:SetIcon(targetname, 6, 10)
 	end
 	if targetname == UnitName("player") then
 		specWarnEncaps:Show()
@@ -90,7 +90,7 @@ end
 
 function mod:OnCombatStart(delay)
 	self.vb.breathCounter = 0
-	self.vb.flameWreathIcon = 8
+	self.vb.flameWreathIcon = 4
 	timerGasCD:Start(17-delay)
 	timerPhase:Start(-delay, L.Air)
 	berserkTimer:Start(-delay)
@@ -114,7 +114,11 @@ function mod:SPELL_AURA_APPLIED(args)
 		if self.Options.WreathIcons then
 			self:SetIcon(args.destName, self.vb.flameWreathIcon)
 		end
-		self.vb.flameWreathIcon = self.vb.flameWreathIcon - 1
+		if self.vb.flameWreathIcon == 4 then
+			self.vb.flameWreathIcon = 2
+		elseif self.vb.flameWreathIcon == 2 then
+			self.vb.flameWreathIcon = 1
+		end
 		self:Unschedule(warnFlameWreathTargets)
 		self:Schedule(0.3, warnFlameWreathTargets, self)
 	end
@@ -160,6 +164,7 @@ function mod:CHAT_MSG_MONSTER_YELL(msg)
 		timerBreath:Start(42, 1)
 		timerPhase:Start(99, L.Ground)
 		self:ScheduleMethod(99, "Groundphase")
+		self:BossTargetScannerAbort(25038, "EncapsulateTarget")
 	end
 end
 

@@ -10,7 +10,7 @@ mod:SetUsedIcons(7, 8)
 mod:RegisterCombat("combat")
 
 mod:RegisterEventsInCombat(
-	"SPELL_AURA_APPLIED 45230 45347 45348",
+	"SPELL_AURA_APPLIED 9657 22442 45230 45347 45348",
 	"SPELL_AURA_APPLIED_DOSE 45347 45348",
 	"SPELL_CAST_START 45248",
 	"SPELL_DAMAGE 45256",
@@ -31,10 +31,16 @@ local specWarnPyro			= mod:NewSpecialWarningDispel(45230, "MagicDispeller", nil,
 local specWarnDarkTouch		= mod:NewSpecialWarningStack(45347, nil, 8, nil, nil, 1, 6)
 local specWarnFlameTouch	= mod:NewSpecialWarningStack(45348, false, 5, nil, nil, 1, 6)
 
+local specWarnSoak          = mod:NewSpecialWarningSoakPos(30616, nil, nil, nil, 4, 2)
+
 local timerBladeCD			= mod:NewCDTimer(11.5, 45248, nil, "Melee", 2, 2)
 local timerBlowCD			= mod:NewCDTimer(20, 45256, nil, nil, nil, 3)
 local timerConflagCD		= mod:NewCDTimer(31, 45333, nil, nil, nil, 3)
 local timerNovaCD			= mod:NewCDTimer(31, 45329, nil, nil, nil, 3)
+local fireSoakCD            = mod:NewTimer(30, "Fire Soak", 22442, nil, nil, 2, nil, nil, 1, 3)
+local shadowSoakCD          = mod:NewTimer(30, "Shadow Soak", 9657, nil, nil, 3, nil, nil, 1, 3)
+local twinSoakCD            = mod:NewTimer(30, "Soak", 20228, nil, nil, 1, nil, nil, 1, 3)
+
 local timerConflag			= mod:NewCastTimer(3.5, 45333, nil, false, 2)
 local timerNova				= mod:NewCastTimer(3.5, 45329, nil, false, 2)
 
@@ -44,17 +50,23 @@ mod:AddBoolOption("RangeFrame", true)
 mod:AddBoolOption("ConflagIcon", false)
 mod:AddBoolOption("NovaIcon", false)
 
+mod.vb.soakCounter = 0
+
 function mod:OnCombatStart(delay)
 	berserkTimer:Start(-delay)
 	if self.Options.RangeFrame then
 		DBM.RangeCheck:Show()
 	end
+	self.vb.soakCounter = 0
 end
 
 function mod:OnCombatEnd()
 	if self.Options.RangeFrame then
 		DBM.RangeCheck:Hide()
 	end
+	shadowSoakCD:Stop()
+	fireSoakCD:Stop()
+	twinSoakCD:Stop()
 end
 
 function mod:SPELL_AURA_APPLIED(args)
@@ -71,6 +83,12 @@ function mod:SPELL_AURA_APPLIED(args)
 			specWarnFlameTouch:Show(args.amount)
 			specWarnFlameTouch:Play("stackhigh")
 		end
+	elseif args.spellId == 9657 and args:IsPlayer() then
+		shadowSoakCD:Start(-15)
+		self.vb.soakCounter = 0
+	elseif args.spellId == 22442 and args:IsPlayer() then
+		fireSoakCD:Start(-15)
+		self.vb.soakCounter = 0
 	end
 end
 mod.SPELL_AURA_APPLIED_DOSE = mod.SPELL_AURA_APPLIED
@@ -124,5 +142,22 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(msg, _, _, _, target)
 		if self.Options.ConflagIcon then
 			self:SetIcon(target, 8, 5)
 		end
+	elseif msg:find("begins to cast Blast Nova") then
+		self.vb.soakCounter = self.vb.soakCounter + 1
+		if self.vb.soakCounter < 2 then
+			fireSoakCD:Start()
+		end
+	elseif msg:find("begins to summon Shadow Clones") then
+		self.vb.soakCounter = self.vb.soakCounter + 1
+		if self.vb.soakCounter < 2 then
+			shadowSoakCD:Start()
+		end
+	elseif msg:find("Magic Affinity has been disrupted") then
+		fireSoakCD:Stop()
+		shadowSoakCD:Stop()
+		twinSoakCD:Start(-15)
+	elseif msg:find("The twins begin to unleash powerful spells") then
+		self.vb.soakCounter = self.vb.soakCounter + 1
+		twinSoakCD:Start()
 	end
 end

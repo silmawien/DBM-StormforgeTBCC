@@ -124,7 +124,8 @@ function mod:SPELL_AURA_APPLIED(args)
 end
 mod.SPELL_AURA_APPLIED_DOSE = mod.SPELL_AURA_APPLIED
 
-function mod:SparkTarget(targetname, uId)
+function mod:SparkTarget()
+	local targetname, targetuid, bossuid = self:GetBossTarget(24850, true)
 	if not targetname then return end
 	if targetname == UnitName("player") then
 		specWarnSpark:Show()
@@ -139,7 +140,7 @@ function mod:SPELL_CAST_START(args)
 		timerBreathCD:Start()
 	end
 	if args.spellId == 41483 then
-		self:BossTargetScanner(24850, "SparkTarget", 0.20, 2)
+		self:ScheduleMethod(0.3, "SparkTarget")
 	end
 end
 
