@@ -24,7 +24,7 @@ local warnConflag			= mod:NewTargetAnnounce(45333, 3)
 local warnNova				= mod:NewTargetAnnounce(45329, 3)
 
 local specWarnConflag		= mod:NewSpecialWarningYou(45333, nil, nil, nil, 1, 2)
-local yellConflag			= mod:NewYell(45333, nil, false)
+local yellConflag			= mod:NewYell(45333, nil, true)
 local specWarnNova			= mod:NewSpecialWarningYou(45329, nil, nil, nil, 1, 2)
 local yellNova				= mod:NewYell(45329)
 local specWarnPyro			= mod:NewSpecialWarningDispel(45230, "MagicDispeller", nil, 2, 1, 2)

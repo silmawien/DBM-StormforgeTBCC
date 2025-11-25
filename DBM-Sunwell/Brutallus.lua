@@ -36,7 +36,8 @@ local timerStompCD		= mod:NewCDTimer(31, 45185, nil, nil, nil, 2)
 local timerBurn			= mod:NewTargetTimer(60, 46394, nil, "false", 2, 3)
 local timerBurnCD		= mod:NewCDTimer(20, 46394, nil, nil, nil, 3)
 local timerArmageddon	= mod:NewCDTimer(40, 20478, nil, nil, nil, 2)
-local timerFlame			= mod:NewBuffActiveTimer(20.2, 31944, nil, nil, nil, 3, nil, DBM_CORE_L.DEADLY_ICON)
+local timerDoomfireCD   = mod:NewCDTimer(40, 31944, nil, nil, nil, 2)
+--local timerFlame			= mod:NewBuffActiveTimer(20.2, 31944, nil, nil, nil, 3, nil, DBM_CORE_L.DEADLY_ICON)
 
 -- timertype = "target", timer, spellId, timerText, optionDefault, optionName (2?), colorType (3)
 
@@ -69,7 +70,7 @@ end
 local function warnFlameWreathTargets(self)
 	if #WreathTargets > 1 then
 		warningFlameTargets:Show(table.concat(WreathTargets, "<, >"))
-		timerFlame:Start()
+		--timerFlame:Start()
 		if UnitIsGroupLeader("player") then
  			SendChatMessage("Doomfire on " .. table.concat(WreathTargets, ", "), (IsInGroup(2) and "INSTANCE_CHAT") or (IsInRaid() and "RAID") or "PARTY")
 		end
@@ -84,6 +85,7 @@ function mod:OnCombatStart(delay)
 	timerBurnCD:Start(-delay)
 	timerStompCD:Start(-delay)
 	timerArmageddon:Start(-delay)
+	timerDoomfireCD:Start(-delay - 20)
 	berserkTimer:Start(-delay)
 end
 
@@ -132,6 +134,7 @@ function mod:SPELL_AURA_APPLIED(args)
 	elseif args.spellId == 20478 then
 		if args:IsPlayer() then
 			yellArmageddon:Yell()
+			specWarnArmageddon:Show()
 		end
 		timerArmageddon:Start()
 		if self.Options.ArmageddonIcon then
@@ -147,6 +150,7 @@ function mod:SPELL_AURA_APPLIED(args)
 		if self.Options.WreathIcons then
 			self:SetIcon(args.destName, self.vb.flameWreathIcon, 20)
 		end
+		timerDoomfireCD:Start()
 		self.vb.flameWreathIcon = self.vb.flameWreathIcon - 1
 		self:Unschedule(warnFlameWreathTargets)
 		self:Schedule(0.3, warnFlameWreathTargets, self)
