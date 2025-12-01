@@ -39,7 +39,7 @@ local timerEncaps			= mod:NewTargetTimer(7, 45665, nil, nil, nil, 3)
 local timerBreath			= mod:NewCDCountTimer(17, 45717, nil, nil, nil, 3, nil, DBM_CORE_L.DEADLY_ICON)
 local timerPhase			= mod:NewTimer(60, "TimerPhase", 31550, nil, nil, 6)
 
-local berserkTimer			= mod:NewBerserkTimer(600) -- guessing
+local berserkTimer			= mod:NewBerserkTimer(540)
 
 local yellGas		        = mod:NewYell(45855)
 
