@@ -9,8 +9,8 @@ mod:SetModelID(23404)
 mod:RegisterCombat("combat")
 
 mod:RegisterEventsInCombat(
-	"SPELL_AURA_APPLIED 45996",
-	"SPELL_CAST_SUCCESS 46177",
+	"SPELL_AURA_APPLIED 42783 45996",
+	"SPELL_CAST_SUCCESS 37063 41126 46177",
 	"SPELL_SUMMON 46268 46282",
 	"UNIT_DIED"
 )
@@ -22,6 +22,15 @@ local warnPhase2		= mod:NewPhaseAnnounce(2)
 local warnFiend			= mod:NewAnnounce("WarnFiend", 2, 46268)
 local warnBlackHole		= mod:NewSpellAnnounce(46282, 3)
 
+local warnWrathTargets  = mod:NewTargetNoFilterAnnounce(42783, 3)
+local specWarnWrath		= mod:NewSpecialWarningMove(42783, nil, nil, nil, 3, 2)
+local yellWrath	        = mod:NewYell(42783)
+
+local timerFlameBurst   = mod:NewTimer(120, "Flame Burst", 41126, nil, nil, 3, nil, nil, 1, 3)
+
+local specWarnVoidZone  = mod:NewSpecialWarningYou(37063, nil, nil, nil, 1, 2)
+local yellVoidZone		= mod:NewYell(37063)
+
 local timerHuman		= mod:NewTimer(60, "TimerHuman", 27778, nil, nil, 6)
 local timerVoid			= mod:NewTimer(30, "TimerVoid", 46087, nil, nil, 6)
 local timerNextDarkness	= mod:NewNextTimer(45, 45996, nil, nil, nil, 2)
@@ -30,8 +39,21 @@ local timerPhase		= mod:NewTimer(10, "TimerPhase", 46087, nil, nil, 6)
 
 local berserkTimer		= mod:NewBerserkTimer(600)
 
+mod:AddSetIconOption("WrathIcons", 42783, true, false, {3, 2, 1})
+
 mod.vb.humanCount = 1
 mod.vb.voidCount = 1
+
+local WrathTargets = {}
+mod.vb.wrathIcon = 3
+
+local function warnWrathTargets(self)
+	if #WrathTargets > 2 then
+		warnWrathTargets:Show(table.concat(WrathTargets, "<, >"))
+	end
+	self.vb.wrathIcon = 3
+	table.wipe(WrathTargets)
+end
 
 local function HumanSpawn(self)
 	warnHuman:Show(self.vb.humanCount)
@@ -50,8 +72,6 @@ end
 local function phase2(self)
 	self:SetStage(2)
 	warnPhase2:Show()
-	self:Unschedule(HumanSpawn)
-	self:Unschedule(VoidSpawn)
 	timerBlackHoleCD:Start(17)
 end
 
@@ -59,18 +79,32 @@ function mod:OnCombatStart(delay)
 	self:SetStage(1)
 	self.vb.humanCount = 1
 	self.vb.voidCount = 1
-	timerHuman:Start(15-delay, 1)
+	timerHuman:Start(5-delay, 1)
 	timerVoid:Start(36.5-delay, 1)
 	timerNextDarkness:Start(-delay)
-	self:Schedule(15, HumanSpawn, self)
+	self:Schedule(5, HumanSpawn, self)
 	self:Schedule(36.5, VoidSpawn, self)
 	berserkTimer:Start(-delay)
+	timerFlameBurst:Start(106-delay)
 end
 
 function mod:SPELL_AURA_APPLIED(args)
 	if args.spellId == 45996 and args:GetDestCreatureID() == 25741 then
 		warnDarkness:Show()
 		timerNextDarkness:Start()
+	elseif args.spellId == 42783 then
+		WrathTargets[#WrathTargets + 1] = args.destName
+		if args:IsPlayer() then
+			yellWrath:Yell()
+			specWarnWrath:Show()
+			specWarnWrath:Play("keepmove")
+		end
+		if self.Options.WrathIcons then
+			self:SetIcon(args.destName, self.vb.wrathIcon, 7)
+		end
+		self.vb.wrathIcon = self.vb.wrathIcon - 1
+		self:Unschedule(warnWrathTargets)
+		self:Schedule(0.3, warnWrathTargets, self)
 	end
 end
 
@@ -79,8 +113,20 @@ function mod:SPELL_CAST_SUCCESS(args)
 		timerNextDarkness:Stop()
 		timerHuman:Stop()
 		timerVoid:Stop()
+		timerFlameBurst:Stop()
 		timerPhase:Start()
+	 	self:Unschedule(HumanSpawn)
+		self:Unschedule(VoidSpawn)
 		self:Schedule(10, phase2, self)
+	elseif args.spellId == 41126 then
+		-- Flame Burst
+        timerFlameBurst:Start(120)
+	elseif args.spellId == 37063 then
+		if args:IsPlayer() then
+			specWarnVoidZone:Show()
+			specWarnVoidZone:Play("targetyou")
+			yellVoidZone:Yell()
+		end
 	end
 end
 

@@ -116,22 +116,22 @@ L:SetGeneralLocalization{
 }
 
 L:SetWarningLocalization{
-	WarnHuman		= "Humanoids (%d)",
+	WarnHuman		= "Adds (%d)",
 	WarnVoid		= "Void Sentinel (%d)",
 	WarnFiend		= "Dark Fiend spawned"
 }
 
 L:SetTimerLocalization{
-	TimerHuman		= "Next Humanoids (%s)",
+	TimerHuman		= "Next Adds (%s)",
 	TimerVoid		= "Next Void (%s)",
 	TimerPhase		= "Entropius"
 }
 
 L:SetOptionLocalization{
-	WarnHuman		= "Show warning for Humanoids",
+	WarnHuman		= "Show warning for Adds",
 	WarnVoid		= "Show warning for Void Sentinels",
 	WarnFiend		= "Show warning for Fiends in phase 2",
-	TimerHuman		= "Show timer for Humanoids",
+	TimerHuman		= "Show timer for Adds",
 	TimerVoid		= "Show timer for Void Sentinels",
 	TimerPhase		= "Show time for Phase 2 transition"
 }
