@@ -67,6 +67,7 @@ function mod:OnCombatEnd()
 	shadowSoakCD:Stop()
 	fireSoakCD:Stop()
 	twinSoakCD:Stop()
+	self:Unschedule(WarnSoak)
 end
 
 function mod:SPELL_AURA_APPLIED(args)
@@ -85,9 +86,11 @@ function mod:SPELL_AURA_APPLIED(args)
 		end
 	elseif args.spellId == 9657 and args:IsPlayer() then
 		shadowSoakCD:Start(-15)
+		self:ScheduleWarnSoak(0, 15)
 		self.vb.soakCounter = 0
 	elseif args.spellId == 22442 and args:IsPlayer() then
 		fireSoakCD:Start(-15)
+		self:ScheduleWarnSoak(0, 15)
 		self.vb.soakCounter = 0
 	end
 end
@@ -111,6 +114,21 @@ function mod:SPELL_CAST_START(args)
 		warnBlade:Show()
 		timerBladeCD:Start()
 	end
+end
+
+function WarnSoak(count)
+	if UnitIsGroupLeader("player") then
+		if (count % 2 == 0) then
+	 		SendChatMessage("*** First Soak in 5 seconds! ***", "RAID_WARNING")
+		else
+			SendChatMessage("*** Second Soak in 5 seconds! ***", "RAID_WARNING")
+		end
+	end
+end
+
+function mod:ScheduleWarnSoak(count, time)
+	self:Unschedule(WarnSoak)
+	self:Schedule(time - 5, WarnSoak, count)
 end
 
 function mod:CHAT_MSG_RAID_BOSS_EMOTE(msg, _, _, _, target)
@@ -143,21 +161,33 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(msg, _, _, _, target)
 			self:SetIcon(target, 8, 5)
 		end
 	elseif msg:find("begins to cast Blast Nova") then
-		self.vb.soakCounter = self.vb.soakCounter + 1
-		if self.vb.soakCounter < 2 then
+		if self.vb.soakCounter < 1 then
+			self:ScheduleWarnSoak(1, 30)
 			fireSoakCD:Start()
 		end
-	elseif msg:find("begins to summon Shadow Clones") then
 		self.vb.soakCounter = self.vb.soakCounter + 1
-		if self.vb.soakCounter < 2 then
+	elseif msg:find("begins to summon Shadow Clones") then
+		if self.vb.soakCounter < 1 then
+			self:ScheduleWarnSoak(1, 30)
 			shadowSoakCD:Start()
 		end
+		self.vb.soakCounter = self.vb.soakCounter + 1
 	elseif msg:find("Magic Affinity has been disrupted") then
 		fireSoakCD:Stop()
 		shadowSoakCD:Stop()
+		self:ScheduleWarnSoak(0, 15)
 		twinSoakCD:Start(-15)
+		self.vb.soakCounter = 0
 	elseif msg:find("The twins begin to unleash powerful spells") then
-		self.vb.soakCounter = self.vb.soakCounter + 1
-		twinSoakCD:Start()
+		-- extra delay after every 2nd soak
+		if (self.vb.soakCounter == 0) then
+			self.vb.soakCounter = 1
+			twinSoakCD:Start(30)
+			self:ScheduleWarnSoak(1, 30)
+		else
+			self.vb.soakCounter = 0
+			twinSoakCD:Start(45)
+			self:ScheduleWarnSoak(0, 45)
+		end
 	end
 end
