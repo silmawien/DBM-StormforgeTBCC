@@ -41,6 +41,11 @@ local fireSoakCD            = mod:NewTimer(30, "Fire Soak", 22442, nil, nil, 2, 
 local shadowSoakCD          = mod:NewTimer(30, "Shadow Soak", 9657, nil, nil, 3, nil, nil, 1, 3)
 local twinSoakCD            = mod:NewTimer(30, "Soak", 20228, nil, nil, 1, nil, nil, 1, 3)
 
+local soakSoon             = mod:NewSpecialWarning("%s", nil, nil, nil, 3, 2)
+
+local fireAffinity          = mod:NewCDTimer(75, 22442, nil, nil, nil, 3)
+local shadowAffinity        = mod:NewCDTimer(75, 9657, nil, nil, nil, 3)
+
 local timerConflag			= mod:NewCastTimer(3.5, 45333, nil, false, 2)
 local timerNova				= mod:NewCastTimer(3.5, 45329, nil, false, 2)
 
@@ -85,10 +90,12 @@ function mod:SPELL_AURA_APPLIED(args)
 			specWarnFlameTouch:Play("stackhigh")
 		end
 	elseif args.spellId == 9657 and args:IsPlayer() then
+		shadowAffinity:Start()
 		shadowSoakCD:Start(-15)
 		self:ScheduleWarnSoak(0, 15)
 		self.vb.soakCounter = 0
 	elseif args.spellId == 22442 and args:IsPlayer() then
+		fireAffinity:Start()
 		fireSoakCD:Start(-15)
 		self:ScheduleWarnSoak(0, 15)
 		self.vb.soakCounter = 0
@@ -120,8 +127,10 @@ function WarnSoak(count)
 	if UnitIsGroupLeader("player") then
 		if (count % 2 == 0) then
 	 		SendChatMessage("*** First Soak in 5 seconds! ***", "RAID_WARNING")
+			soakSoon:Show("Soak #1 soon")
 		else
 			SendChatMessage("*** Second Soak in 5 seconds! ***", "RAID_WARNING")
+			soakSoon:Show("Soak #2 soon")
 		end
 	end
 end
