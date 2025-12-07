@@ -10,7 +10,7 @@ mod:RegisterCombat("combat")
 
 mod:RegisterEventsInCombat(
 	"SPELL_AURA_APPLIED 42783 45996",
-	"SPELL_CAST_SUCCESS 37063 41126 46177",
+	"SPELL_CAST_SUCCESS 37063 41126 46177 45996",
 	"SPELL_SUMMON 46268 46282",
 	"UNIT_DIED"
 )
@@ -47,7 +47,7 @@ mod.vb.voidCount = 1
 local WrathTargets = {}
 mod.vb.wrathIcon = 3
 
-local function warnWrathTargets(self)
+local function warnWrathTargetsFunc(self)
 	if #WrathTargets > 2 then
 		warnWrathTargets:Show(table.concat(WrathTargets, "<, >"))
 	end
@@ -89,10 +89,10 @@ function mod:OnCombatStart(delay)
 end
 
 function mod:SPELL_AURA_APPLIED(args)
-	if args.spellId == 45996 and args:GetDestCreatureID() == 25741 then
-		warnDarkness:Show()
-		timerNextDarkness:Start()
-	elseif args.spellId == 42783 then
+--	if args.spellId == 45996 and args:GetDestCreatureID() == 25741 then
+--		warnDarkness:Show()
+--		timerNextDarkness:Start()
+	if args.spellId == 42783 then
 		WrathTargets[#WrathTargets + 1] = args.destName
 		if args:IsPlayer() then
 			yellWrath:Yell()
@@ -103,13 +103,16 @@ function mod:SPELL_AURA_APPLIED(args)
 			self:SetIcon(args.destName, self.vb.wrathIcon, 7)
 		end
 		self.vb.wrathIcon = self.vb.wrathIcon - 1
-		self:Unschedule(warnWrathTargets)
-		self:Schedule(0.3, warnWrathTargets, self)
+		self:Unschedule(warnWrathTargetsFunc)
+		self:Schedule(1.0, warnWrathTargetsFunc, self)
 	end
 end
 
 function mod:SPELL_CAST_SUCCESS(args)
-	if args.spellId == 46177 then
+	if args.spellId == 45996 then
+		warnDarkness:Show()
+		timerNextDarkness:Start()
+    elseif args.spellId == 46177 then
 		timerNextDarkness:Stop()
 		timerHuman:Stop()
 		timerVoid:Stop()
