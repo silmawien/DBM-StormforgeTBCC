@@ -32,14 +32,14 @@ local specWarnBomb		= mod:NewSpecialWarningMoveTo(46605, nil, nil, nil, 3, 2)--f
 local specWarnDarkOrb	= mod:NewSpecialWarning("SpecWarnDarkOrb", false)
 local specWarnBlueOrb	= mod:NewSpecialWarning("SpecWarnBlueOrb", false)
 
-local timerBloomCD		= mod:NewCDTimer(20, 45641, nil, nil, nil, 2)
+local timerBloomCD		= mod:NewCDTimer(26, 45641, nil, nil, nil, 2)
 local timerDartCD		= mod:NewCDTimer(20, 45740, nil, nil, nil, 2)--Targeted or aoe?
 local timerBomb			= mod:NewCastTimer(9, 46605, nil, nil, nil, 2, nil, DBM_CORE_L.DEADLY_ICON)
 local timerBombCD		= mod:NewCDTimer(45, 46605, nil, nil, nil, 2, nil, DBM_CORE_L.DEADLY_ICON)
 local timerSpike		= mod:NewCastTimer(28, 46680, nil, nil, nil, 3)
 local timerBlueOrb		= mod:NewTimer(37, "TimerBlueOrb", 45109, nil, nil, 5)
 
-local berserkTimer		= mod:NewBerserkTimer(900)
+--local berserkTimer		= mod:NewBerserkTimer(900)
 
 mod:AddBoolOption("BloomIcon", true)
 mod:AddBoolOption("RangeFrame", true)
@@ -60,10 +60,11 @@ function mod:OnCombatStart(delay)
 	table.wipe(orbGUIDs)
 	self.vb.bloomIcon = 8
 	self:SetStage(1)
-	berserkTimer:Start(-delay)
+--	berserkTimer:Start(-delay)
 	if self.Options.RangeFrame then
 		DBM.RangeCheck:Show()
 	end
+	timerBloomCD:Start(18)
 end
 
 function mod:OnCombatEnd()
@@ -135,6 +136,7 @@ function mod:SPELL_CAST_SUCCESS(args)
 			timerBlueOrb:Start()
 			timerDartCD:Start(59)
 			timerBombCD:Start(77)
+			timerBloomCD:Start(60)
 		elseif self.vb.phase == 3 then
 			warnPhase3:Show()
 			timerBlueOrb:Cancel()
@@ -143,6 +145,7 @@ function mod:SPELL_CAST_SUCCESS(args)
 			timerBlueOrb:Start()
 			timerDartCD:Start(48.7)
 			timerBombCD:Start(77)
+			timerBloomCD:Start(60)
 		elseif self.vb.phase == 4 then
 			warnPhase4:Show()
 			timerBlueOrb:Cancel()
@@ -151,6 +154,7 @@ function mod:SPELL_CAST_SUCCESS(args)
 			timerBlueOrb:Start(45)
 			timerDartCD:Start(49)
 			timerBombCD:Start(58)
+			timerBloomCD:Start(60)
 		end
 	end
 end
